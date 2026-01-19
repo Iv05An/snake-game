@@ -1,0 +1,31 @@
+# Скомпилированные файлы
+*.exe
+*.o
+*.out
+*.obj
+*.ilk
+*.pdb
+
+# Папки сборки
+build/
+Debug/
+Release/
+bin/
+obj/
+.vs/
+*.vcxproj
+*.sln
+*.suo
+
+# Системные файлы
+.DS_Store
+Thumbs.db
+
+# Файлы IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Исключения для Windows
+*.user
+*.aps
