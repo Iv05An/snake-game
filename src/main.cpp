@@ -5,6 +5,7 @@
 #include <time.h>
 #include <vector>
 #include <array>
+#include <ctime>
 #define N 5
 
 using namespace std;
@@ -24,59 +25,37 @@ struct food
         int x, y;
     };
 
-void cord(array<food, N> &foods, const int& width, const int& height, const vector<segment> &snake, bool eating, int i_food)
+food generateFood(vector<food> &foods, const vector<segment> &snake, const int& width, const int& height)
 {
-    if (!eating)
+    food cordFood;
+    bool valid = false;
+    while (!valid)
     {
-        bool valid = false;
-        for (int i = 0; i<foods.size(); ++i)
-        {
-            valid = false;
-            while (!valid)
-            {
-                foods[i].x = 1 + rand() % (width - 2);   // от 1 до width-2
-                foods[i].y = 1 + rand() % (height - 2);  // от 1 до height-2
+        valid = true;
+        cordFood.x = 1 + rand() % (width - 2);   // от 1 до width-2
+        cordFood.y = 1 + rand() % (height - 2);  // от 1 до height-2
             
-                for (int j=0; j<snake.size(); j++)
-                {
-                    if (foods[j].x == snake[j].x && foods[j].y == snake[j].y) 
-                    {
-                        valid = false;
-                        continue;
-                    }
-                    valid = true;
-                }
-            }
-        }
-    }
-    else 
-    {
-        int foodX, foodY;
-        bool valid = false;
-        while (!valid)
+        for (int j=0; j<snake.size(); j++)
         {
-            foodX = 1 + rand() % (width - 2);   // от 1 до width-2
-            foodY = 1 + rand() % (height - 2);  // от 1 до height-2
-        
-            for (int i=0; i<snake.size(); i++)
+            if (cordFood.x == snake[j].x && cordFood.y == snake[j].y) 
             {
-                if (foods[i_food].x == snake[i].x && foods[i_food].y == snake[i].y) 
-                    {
-                        valid = false;
-                        continue;
-                    }
-                    foods[i_food].x=foodX;
-                    foods[i_food].y=foodY;
-                
+                valid = false;
+                continue;
             }
-            valid = true;
         }
-    }
-    
-  
+
+        if (valid)
+        {
+            for (const auto &food: foods)
+            {
+                if (food.x == cordFood.x && food.y == cordFood.y) valid = false;
+            }
+        }
+    }   
+    return  cordFood;              
 }
 
-void eating(array<food, N> &foods, const int& width, const int& height, segment &tail, vector<segment> &snake, int &size)
+void eating(vector<food> &foods, segment &tail, vector<segment> &snake, int &size, int &count)
 {
     for (int i = 0; i<foods.size(); ++i)
     {
@@ -84,13 +63,17 @@ void eating(array<food, N> &foods, const int& width, const int& height, segment 
         {
             snake.push_back({tail.x, tail.y});
             size++;
-            cord(foods, width, height, snake, true, i);
+
+            foods.erase(foods.begin()+i);
+            count--;
+            --i;
+            break;
         }
     }
     
 }
 
-bool isFoodAt(array<food, N> &foods, int &i, int &j)
+bool isFoodAt(vector<food> &foods, int &i, int &j)
 {
     for (const food& food_: foods)
     {
@@ -108,8 +91,7 @@ int main() {
     static int size=0;
 
     vector<segment> snake;
-    // food food [N] = {0};
-    array<food, N> foods;
+    vector<food> foods;
 
     snake.push_back({width/2, height/2});
     snake.push_back({width/2-1, height/2});
@@ -119,10 +101,20 @@ int main() {
  
     bool gameover = false;
 
-    cord(foods, width, height, snake, false, 0);  
+    int count = 0;
 
+    clock_t start_time = clock();
+    
     while (!gameover)
     {
+        if ((clock() - start_time) / CLOCKS_PER_SEC >= 2.5 && count<5) 
+        {
+            food cord_food = generateFood(foods, snake, width, height);
+            foods.push_back(cord_food);
+            count++;
+            start_time = clock();
+        }
+
         clearScreen();
 
         for (int j = 0; j<height; ++j)
@@ -185,7 +177,7 @@ int main() {
                     }
                     
                     snake[0].y--;
-                    eating(foods, width, height, tempTail, snake, size);
+                    eating(foods, tempTail, snake, size, count);
                 }
                 else if (newHeadY!=snake[1].y) gameover=true;
             }
@@ -214,7 +206,8 @@ int main() {
                     }
 
                     snake[0].y++;
-                    eating(foods, width, height, tempTail, snake, size);
+
+                    eating(foods, tempTail, snake, size, count);
                 }
                 else if (newHeadY!=snake[1].y) gameover=true;
             }
@@ -243,7 +236,8 @@ int main() {
                     }
 
                     snake[0].x--;
-                    eating(foods, width, height, tempTail, snake, size);
+
+                    eating(foods, tempTail, snake, size, count);
                 }
                 else if (newHeadX!=snake[1].x) gameover=true;
             }
@@ -272,7 +266,8 @@ int main() {
                     }
 
                     snake[0].x++;
-                    eating(foods, width, height, tempTail, snake, size);
+
+                    eating(foods, tempTail, snake, size, count);
                 }
                 else if (newHeadX!=snake[1].x) gameover=true;
             }
