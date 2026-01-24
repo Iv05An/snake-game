@@ -17,5 +17,5 @@
 
 ## 🛠️ Сборка
 ```bash
-g++ src/frame.cpp -o snake.exe
-./snake.exe
+g++ src/main.cpp -o main.exe
+./main.exe
