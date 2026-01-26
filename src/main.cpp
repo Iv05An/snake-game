@@ -10,14 +10,11 @@
 #include <chrono>
 #include <ctime>
 #include <iomanip>
+#include <algorithm>
 #define N 5
+#define limit 10
 
 using namespace std;
-
-void clearScreen()
-{
-    system("clear");
-}
 
 struct segment
 {
@@ -28,6 +25,26 @@ struct food
     {
         int x, y;
     };
+
+    struct record_n
+{
+    string name;
+    int size;
+    time_t timestamp;
+};
+
+enum gameState
+{
+    MAIN_MENU,
+    PLAYING,
+    GAMEOVER,
+    RECORDS
+};
+
+void clearScreen()
+{
+    system("clear");
+}
 
 food generateFood(vector<food> &foods, const vector<segment> &snake, const int& width, const int& height)
 {
@@ -86,14 +103,6 @@ bool isFoodAt(vector<food> &foods, int &i, int &j)
     return false;
 }
 
-enum gameState
-{
-    MAIN_MENU,
-    PLAYING,
-    GAMEOVER,
-    RECORDS
-};
-
 void showMainMenu(gameState &currentState)
 {
     int input;
@@ -146,7 +155,7 @@ int gameLoop(gameState &currentState)
     const int width = 20;
     const int height = 10;
 
-    static int size=0;
+    int size=0;
 
     vector<segment> snake;
     vector<food> foods;
@@ -348,26 +357,13 @@ void write_record(int &size)
     cout<<"enter name: ";
     cin>>name;
 
-    auto now = chrono::system_clock::now();
-    
-    // Преобразуем в time_t
-    time_t time = chrono::system_clock::to_time_t(now);
-    
-    // Преобразуем в локальное время
-    tm local_time = *localtime(&time);
+    time_t timestamp  = time(nullptr);
 
     ofstream file("records.txt", ios::app);
-    file<<name<<" "<<size<<" "<<put_time(&local_time, "%d.%m.%Y(%H:%M:%S)")<<endl;
+    file<<name<<" "<<size<<" "<<timestamp<<endl;
 
     file.close();
 }
-
-struct record_n
-{
-    string name;
-    int size;
-    string time;
-};
 
 vector<record_n> records_vector()
 {
@@ -379,7 +375,7 @@ vector<record_n> records_vector()
         return records;
     }
     
-    while(file>>record.name>>record.size>>record.time)
+    while(file>>record.name>>record.size>>record.timestamp)
     {
         records.push_back(record);
     }
@@ -389,11 +385,21 @@ vector<record_n> records_vector()
 
 void print_records(vector<record_n> &records_vector)
 {
+    sort(records_vector.begin(), records_vector.end(), [](const record_n &a, const record_n &b) {
+        if (a.size!=b.size) return a.size>b.size;
+        return a.timestamp>b.timestamp;
+    });
+
+    int top_count=min(10, (int)records_vector.size());
+    tm *local_time;
+    char buffer[80];
     cout<<"=======RECORDS======="<<endl;
     cout<<"name    count    date"<<endl;
-    for (int i =0; i<records_vector.size(); ++i)
+    for (int i =0; i<top_count; ++i)
     {
-        cout<<records_vector[i].name<<'\t'<<records_vector[i].size<<'\t'<<records_vector[i].time<<endl;
+        local_time = localtime(&records_vector[i].timestamp);
+        strftime(buffer, 80, "%d.%m.%Y %H:%M", local_time);
+        cout<<records_vector[i].name<<'\t'<<records_vector[i].size<<'\t'<<buffer<<endl;
     }
 }
 int main() {
@@ -425,6 +431,7 @@ int main() {
             cout<<"Enter q for exit: ";
             char ch;
             while(!((cin>>ch)&&ch=='q'))
+            {}
             currentState=MAIN_MENU;
             break;
         }
