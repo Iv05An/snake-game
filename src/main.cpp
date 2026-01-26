@@ -82,7 +82,61 @@ bool isFoodAt(vector<food> &foods, int &i, int &j)
     return false;
 }
 
-int main() {
+enum gameState
+{
+    MAIN_MENU,
+    PLAYING,
+    GAMEOVER,
+    RECORDS
+};
+
+void showMainMenu(gameState &currentState)
+{
+    int input;
+    clearScreen();
+
+    cout<<"========SNAKE========"<<endl;
+    cout<<"FOR START GAME ENTER:"<<endl;
+    cout<<"-1 START"<<endl;
+    cout<<"-2 table of records"<<endl;
+    cout<<"-3 exit"<<endl;
+
+    while (!(cin>>input)||input<1||input>3)
+    {
+        cin.clear();
+        cin.ignore(1000, '\n');
+
+        clearScreen();
+        cout<<"Enter an integer value of 1, 2, or 3"<<endl;
+        Sleep(1000);
+        clearScreen();
+        
+        cout<<"========SNAKE========"<<endl;
+        cout<<"FOR START GAME ENTER:"<<endl;
+        cout<<"-1 START"<<endl;
+        cout<<"-2 table of records"<<endl;
+        cout<<"-3 exit"<<endl;
+
+    }
+
+    switch (input)
+    {
+    case 1 :
+        currentState=PLAYING;
+        break;
+    case 2 :
+        currentState=RECORDS;
+        break;
+    case 3 :
+        exit(0);
+        break;   
+    default:
+        break;
+    }
+}
+
+void gameLoop(gameState &currentState)
+{
     srand(time(NULL));
 
     const int width = 20;
@@ -272,12 +326,38 @@ int main() {
                 else if (newHeadX!=snake[1].x) gameover=true;
             }
 
-            if (key=='q') gameover=true; //выход из игры
+            // if (key=='q') gameover=true; //выход из игры
         }
 
-        Sleep(100);
+        // Sleep(100);
     }
 
-    cout<<"gameover"<<endl;
+    // cout<<"gameover"<<endl;
+    currentState=GAMEOVER;
+}
+
+int main() {
+    gameState currentState = MAIN_MENU;
+    while (true)
+    {
+        switch (currentState)
+        {
+        case MAIN_MENU:
+            showMainMenu(currentState);
+            break;
+        case PLAYING:
+            gameLoop(currentState);
+            break;
+        case GAMEOVER:
+            currentState=MAIN_MENU;
+            clearScreen();
+            cout<<"GAMEOVER===GAMEOVER===GAMEOVER";
+            Sleep(1000);
+            break;
+        default:
+            break;
+        }
+    }
+    
     return 0;
 }
