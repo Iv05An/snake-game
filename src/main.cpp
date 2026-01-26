@@ -1,11 +1,15 @@
 #include <iostream>
-#include <stdlib.h>
 #include <conio.h>
 #include <windows.h>
 #include <time.h>
 #include <vector>
 #include <array>
 #include <ctime>
+#include <string>
+#include <fstream>
+#include <chrono>
+#include <ctime>
+#include <iomanip>
 #define N 5
 
 using namespace std;
@@ -135,7 +139,7 @@ void showMainMenu(gameState &currentState)
     }
 }
 
-void gameLoop(gameState &currentState)
+int gameLoop(gameState &currentState)
 {
     srand(time(NULL));
 
@@ -334,8 +338,64 @@ void gameLoop(gameState &currentState)
 
     // cout<<"gameover"<<endl;
     currentState=GAMEOVER;
+    return size;
 }
 
+void write_record(int &size)
+{
+    clearScreen;
+    string name;
+    cout<<"enter name: ";
+    cin>>name;
+
+    auto now = chrono::system_clock::now();
+    
+    // Преобразуем в time_t
+    time_t time = chrono::system_clock::to_time_t(now);
+    
+    // Преобразуем в локальное время
+    tm local_time = *localtime(&time);
+
+    ofstream file("records.txt", ios::app);
+    file<<name<<" "<<size<<" "<<put_time(&local_time, "%d.%m.%Y(%H:%M:%S)")<<endl;
+
+    file.close();
+}
+
+struct record_n
+{
+    string name;
+    int size;
+    string time;
+};
+
+vector<record_n> records_vector()
+{
+    vector<record_n> records;
+    record_n record;
+    ifstream file("records.txt");
+    if (!file) {
+        cout << "Файл рекордов не найден, создаём новый" << endl;
+        return records;
+    }
+    
+    while(file>>record.name>>record.size>>record.time)
+    {
+        records.push_back(record);
+    }
+    file.close();
+    return records;
+}
+
+void print_records(vector<record_n> &records_vector)
+{
+    cout<<"=======RECORDS======="<<endl;
+    cout<<"name    count    date"<<endl;
+    for (int i =0; i<records_vector.size(); ++i)
+    {
+        cout<<records_vector[i].name<<'\t'<<records_vector[i].size<<'\t'<<records_vector[i].time<<endl;
+    }
+}
 int main() {
     gameState currentState = MAIN_MENU;
     while (true)
@@ -346,18 +406,34 @@ int main() {
             showMainMenu(currentState);
             break;
         case PLAYING:
-            gameLoop(currentState);
+        {
+            int size = gameLoop(currentState);
+            write_record(size);
             break;
+        }
+            
         case GAMEOVER:
             currentState=MAIN_MENU;
             clearScreen();
             cout<<"GAMEOVER===GAMEOVER===GAMEOVER";
             Sleep(1000);
             break;
+        case RECORDS:
+        {
+            vector<record_n>records_vec = records_vector();
+            print_records(records_vec);
+            cout<<"Enter q for exit: ";
+            char ch;
+            while(!((cin>>ch)&&ch=='q'))
+            currentState=MAIN_MENU;
+            break;
+        }
+            
         default:
             break;
         }
     }
+    
     
     return 0;
 }
