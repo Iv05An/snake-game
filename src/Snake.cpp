@@ -1,4 +1,4 @@
-#include "Snake.h"
+#include "../include/Snake.h"
 #include <iostream>
 
 Snake::Snake(int startX, int startY, int initialLength)
